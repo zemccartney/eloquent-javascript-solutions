@@ -52,15 +52,58 @@ function ArraySeq (array) {
   }
 }
 
-
-ArraySeq.prototype.length = function () {
-  return this.inner.length;
+// This works
+// However, the object returned isn't an ArraySeq object
+// it's just a regular ass object
+// which doesn't allow us to define properties on it via its prototype object,
+// which is used to create new objects from that constructor when the new operator is called
+// on the constructor
+function ArraySeq(array) {
+  var newArraySequence = {};
+  Sequence.apply(newArraySequence, array)
+  return newArraySequence;
 }
+
+
+
+
+// CORRECT VERSION
+
+LEARNING
+- in composition, calls to object from which enclosing one is composed
+have to mirror structure of inner object properties
+- Specifically, if the original object property is a getter, the outer
+object property must also be a getter in order to use the same interface as
+the inner object i.e. both callable as properties with dot notation
+- If you do not do this, the outer object interface for that property will have to
+use function-calling notation (getProperty() ), which means that the same code
+will not be able to use the outer object that can use the inner object
+- polymorphism requires structural and output consistency, but accepts internal differences,
+to preserver interface?
+
+
+function ArraySeq (array) {
+  this.inner = new Sequence();
+  for (var prop in array) {
+    this.inner[prop] = array[prop];
+  }
+}
+
+Object.defineProperty(ArraySeq.prototype, "length", {
+  get: function () {
+    return this.inner.length;
+  },
+  enumerable: false
+})
+
+Object.defineProperty(ArraySeq.prototype, "currentValue", {
+  get: function () {
+    return this.inner.currentValue;
+  },
+  enumerable: false
+})
+
 
 ArraySeq.prototype.moveOn = function () {
   return this.inner.moveOn();
-}
-
-ArraySeq.prototype.currentValue = function () {
-  return this.inner.currentValue;
 }
