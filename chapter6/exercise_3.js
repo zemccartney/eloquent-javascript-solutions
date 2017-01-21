@@ -16,6 +16,32 @@ function logFive (sequenceObject) {
   }
 }
 
+function ArraySeq (array) {
+  this.inner = new Sequence();
+  for (var prop in array) {
+    this.inner[prop] = array[prop];
+  }
+}
+
+Object.defineProperty(ArraySeq.prototype, "length", {
+  get: function () {
+    return this.inner.length;
+  },
+  enumerable: false
+})
+
+Object.defineProperty(ArraySeq.prototype, "currentValue", {
+  get: function () {
+    return this.inner.currentValue;
+  },
+  enumerable: false
+})
+
+
+ArraySeq.prototype.moveOn = function () {
+  return this.inner.moveOn();
+}
+
 RESULTS
 
 EXPERIMENTATION
