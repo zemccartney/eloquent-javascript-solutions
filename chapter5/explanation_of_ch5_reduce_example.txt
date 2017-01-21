@@ -1,0 +1,13 @@
+console.log(ancestry.reduce(function(min, cur) {
+  
+  // for each 2 values in the array, we check if the current (which is passed as 
+  // min argument) value's born property is greater than array[i]'s (or cur) 
+  // born property. If it is, then we know that the current value is not
+  // the oldest ancestor, so we can return cur as the new min (standard against which 
+  // we check subsequent values (we hypothesize a least value until invalidated
+  // by subsequent checks). If it isn't, then we know that min is still in the running
+  // for oldest ancestor b/c there's at least one value than which it is older
+  if (cur.born < min.born) return cur;
+  else return min;
+}));
+// → {name: "Pauwels van Haverbeke", born: 1535, …}
