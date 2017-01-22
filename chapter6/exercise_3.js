@@ -2,6 +2,62 @@ TITLE: Sequence Interface
 
 SUBMITTED SOLUTION (ASSUMES PASSED TESTING)
 
+Object.defineProperty(Sequence.prototype, "iteration",
+                      { enumerable: false, writable: true, value: null });
+
+
+Object.defineProperty(Sequence.prototype, "length", {
+get: function () {
+  return Object.keys(this).length - 1;
+}
+});
+
+Object.defineProperty(Sequence.prototype, "currentValue", {
+  get: function () {
+    var checked = this.iteration || this;
+
+    return checked[Object.keys(checked)[0]];
+
+  }
+})
+
+
+Sequence.prototype.moveOn = function () {
+  var next = this.iteration || new Sequence();
+
+  if (!this.iteration) {
+  	for (var prop in this) {
+    	if (this.hasOwnProperty(prop)) {
+    		next[prop] = this[prop];
+    	}
+  	}
+  }
+
+  delete next[Object.keys(next)[0]];
+
+  this.iteration = next;
+
+  if (this.iteration.endSequence()) {
+    console.log("We've reached the end of the sequence!")
+    delete this.iteration;
+  }
+}
+
+Sequence.prototype.endSequence = function () {
+  if (this && Object.keys(this).length == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function Sequence () {
+  for (var prop in arguments) {
+    this[prop] = arguments[prop];
+  }
+
+}
+
 
 function logFive (sequenceObject) {
   // comparing to 4, so sequence of >5 logs only first 5
@@ -41,6 +97,14 @@ Object.defineProperty(ArraySeq.prototype, "currentValue", {
 ArraySeq.prototype.moveOn = function () {
   return this.inner.moveOn();
 }
+
+function RangeSeq (from, to) {
+  for (var index = 0; from <= to; index++, from++) {
+  	this[index] = from;
+  }
+}
+
+RangeSeq.prototype = Object.create(Sequence.prototype);
 
 RESULTS
 
