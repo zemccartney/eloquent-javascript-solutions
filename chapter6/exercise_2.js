@@ -21,10 +21,20 @@ StretchCell.prototype.minHeight = function () {
 // for methods that require arguments, you have to set those arguments as wrapping function's parameters,
 // then pass them to the composed object's method. Otherwise, composed object can't access
 StretchCell.prototype.draw = function (width,height) {
+  // so, for example, this fails if you say just this.inner.draw
   return this.inner.draw(width,height);
 }
 
 RESULTS
+
+- missing semicolons from end of prototype property assignments
+- otherwise, matched book exactly
+- Learned an interesting thing about this console.log(sc.draw(this.width, this.height))
+    - refers to the item to which you are passing the expression
+    - so, even though this.width is passed to sc.draw, this refers to the console, I believe?
+    - the above line produces an empty cell array because the console object does not
+    have width and height properties, so both parameters evaluate to null 
+
 
 HAD TO LOOK AT HINTS
 

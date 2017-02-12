@@ -2,48 +2,80 @@ TITLE: Sequence Interface
 
 SUBMITTED SOLUTION (ASSUMES PASSED TESTING)
 
-Object.defineProperty(Sequence.prototype, "iteration",
-                      { enumerable: false, writable: true, value: null });
+Object.defineProperty(Sequence.prototype, "iteration",{
+  // so iteration isn't counted in Object.keys
+  enumerable: false,
+  writable: true,
+  value: null
+});
 
 
 Object.defineProperty(Sequence.prototype, "length", {
-get: function () {
-  return Object.keys(this).length - 1;
-}
+  get: function () {
+    // items in sequence are properties of the sequence object
+    // -1 because of zero indexing
+    return Object.keys(this).length - 1;
+  }
 });
 
 Object.defineProperty(Sequence.prototype, "currentValue", {
   get: function () {
     var checked = this.iteration || this;
 
+    // returns the first property on the object
+    // THIS IS BAD; NEVER ANY GUARANTEES ABOUT ORDER OF PROPERTIES
+    // AVOID DOING THIS
     return checked[Object.keys(checked)[0]];
+    // 0TH index is always next item in the sequence
+    // in this case, order of properties is guaranteed b/c it's a sequence?
 
   }
 })
 
 
 Sequence.prototype.moveOn = function () {
+
+  // iteration property tracks the progress through the sequence
+  // iteration doesn't exist if you haven't started iteration, in which case, you
+  // need to create a new sequence object????
+  // could it be an array?
   var next = this.iteration || new Sequence();
 
+  // if no iteration property
   if (!this.iteration) {
+
+    // for all properties in the sequence object
   	for (var prop in this) {
+
+      // if the properties are the object's own i.e. not inherited from the prototype (
+      // these are the utility / interface properties (length, moveOn, etc.))
     	if (this.hasOwnProperty(prop)) {
+        // creates a property on next with the key 'prop' and assigns the value of the sequence
+        // object's prop property to next[prop]
+        // basically, loops over all items in the original sequence object and duplicates
+        // them in the iteration object
     		next[prop] = this[prop];
     	}
   	}
   }
 
+  // deletes the 0th property in sequence i.e. the next to be read in iterating through
+  // deleting means we have read/iterated over this item and no longer need to care about it, we've moved on
   delete next[Object.keys(next)[0]];
 
   this.iteration = next;
 
   if (this.iteration.endSequence()) {
-    console.log("We've reached the end of the sequence!")
+    console.log("We've reached the end of the sequence!");
+    // if we've hit the end of the iteration
+    // delete the iteration object, signifying that we have completed moving through the sequence
     delete this.iteration;
   }
 }
 
 Sequence.prototype.endSequence = function () {
+  // check for existence of this b/c I call this only on the iteration object,
+  // which is created to start an iteration and deleted when all values have been iterated over
   if (this && Object.keys(this).length == 0) {
     return true;
   } else {
@@ -106,7 +138,78 @@ function RangeSeq (from, to) {
 
 RangeSeq.prototype = Object.create(Sequence.prototype);
 
+
+
 RESULTS
+
+- SPACING!!!! Pay attention
+- BOOK VERSION function logFive(sequence) {
+  for (var i = 0; i < 5; i++) {
+
+    // means you don't have to care about if sequence has more or less than 5 items
+    // loop tries to get to 5
+    // HOWEVER, if you learn that sequence.next is false i.e. there are no more items,
+    // you exit the loop. So, you learn where the loop ends on the fly; you don't need
+    // to take the time to do so up front. next() method tells you
+    if (!sequence.next())
+      break;
+    console.log(sequence.current());
+  }
+}
+
+- the book did not define a base sequence object??? what the hell?
+    - not strictly necessary given the instructions
+    - instructions suggest you just have to 1.) define interface  2.) write a method
+    that you know will use that interface to produce the intended output 3.) code objects
+    to work in your system
+
+- WAAAYYY overcomplicated the range sequence
+- WHY WOULD YOU DO Object.defineProperty vs. defining via dot notation??
+    - Any other reasons besides needing to configure property (getter, setter, enumerable, etc.)?
+        - which is a hugely important technique, it seems
+
+- shot myself in the foot a bit?
+    - relying on order in keys
+        - seems to be always better to rely on property names for accessing values
+            - if you know a name, you can call, does not matter the context in which
+            the name exists, it will come
+            - whereas an order-based expression could return unpredictable results if order
+            is changed; Order is more arbitrary than naming?? (name is unitary, order is relational??
+              relationships are more chaotic than units?)
+    - made moveOn dependent on endSequence i.e. different chunks
+    of code have to know about each other and are intertwined, making changes to any part of this system
+    exponentially more difficult. AVOID DEPENDING FUNCTIONS ON ONE ANOTHER...OR AT LEAST METHODS?
+        - is this right?
+        - or am I just bummed about the "iteration" convention I used??
+        - I dunno...book uses make function within rest function
+
+- RangeSequence prototype is an empty Sequence object because
+    - when you create an object e.g. Object.create, "Constructors (in fact, all functions)
+    automatically get a property named prototype, which by default holds a plain,
+     empty object that derives from Object.prototype" i.e. new object created is
+     totally empty, except for property assignments in constructor function
+     - HOWEVER, this new, empty object can access properties set on its constructor's
+     prototype property, which is the object's prototype
+     - SO, what happens when you define a property on an object's prototype when you create it via inheritance?
+         - basically the same thing as writing this.prop within a constructor   NOOO INCORRECT
+         - the property is added to the empty object returned by the Object.create statement
+         - which means...when creating a range sequence object, the following happens
+         1. Object (empty Sequence object) created
+         2. MoveOn property added
+         3. new empty RangeSequence object constructed
+          - has access to version of moveOn on the empty Sequence, which overrides the moveOn
+          on the Sequence prototype 1 step up the prototype chain
+          - but does not OWN that property
+          - PROVEN BY:
+              - var yungscrub = new RangeSeq(1,2);
+              - console.log(Object.getPrototypeOf(yungscrub));
+
+- Book doesn't bother with length or endSequence methods
+  - in both methods, book represented end of sequence with a value or property
+    - null in the second case, if next() returned false
+    - lesson...when you can, represent information with values, not create it with functions?
+      - i.e. don't create new functions to perform checks of state when you don't have to
+
 
 EXPERIMENTATION
 
