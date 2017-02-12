@@ -1,13 +1,9 @@
 TITLE: A Vector Type
 
 SUBMITTED SOLUTION (ASSUMES PASSED TESTING)
-
-RESULTS
 function Vector (x,y) {
-
-this.x = x;
-this.y = y;
-
+  this.x = x;
+  this.y = y;
 }
 
 Vector.prototype.plus = function (vector) {
@@ -24,6 +20,30 @@ Object.defineProperty(Vector.prototype, "length", {get: function() {
   return Math.sqrt((this.x * this.x) + (this.y * this.y));
   // set enumerable to true only if you want to expose length to enumeration
 }, enumerable: true})
+
+
+RESULTS
+
+- Remember to maintain proper spacing!
+- Book did not assign new vector in plus and minus methods to a variable, just returned
+the entire expression that creates the new vector
+    - assignment is unnecessary, adds a step; Try to avid any and all extra steps! Extra steps = complexity!
+        - complexity means mistakes are more likely
+        - this is not a big deal, but I assume someone unfamiliar, reading this code,
+        would look at that assignment, and a small question mark would spring up in their mind
+        - milliseconds of thought, but totally unnnecessary milliseconds
+- on "length" property, no need to set enumerable? Did that I think just to experiment?
+Otherwise, same as the Book
+    - except that you unnecessarily / defensively wrapped mutliplication statements in parentheses
+- and could hav used better spacing on the configuration object
+
+So, like this:
+Object.defineProperty(Vector.prototype, "length", {
+  get: function() {
+    return Math.sqrt((this.x * this.x) + (this.y * this.y));
+  }
+});
+
 
 EXPERIMENTATION
 
