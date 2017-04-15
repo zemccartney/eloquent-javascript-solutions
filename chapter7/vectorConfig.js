@@ -44,8 +44,8 @@ function vectorRange (offset) {
 View.prototype.forage = function (food) {
   var forageDir = null;
   // start with offset 2 because critter has already checked the space around it (offset of 1) for food
-  for (var i = 2; i <= 5; i++) {
-    var newDirections = vectorRange(i);
+  for (var smellOffset = 2; i <= 5; smellOffset++) {
+    var newDirections = vectorRange(smellOffset);
     for (var dir in newDirections) {
       var forageTest = this.vector.plus(newDirections[dir]);
       if (this.world.grid.isInside(forageTest)) {
@@ -61,3 +61,67 @@ View.prototype.forage = function (food) {
 }
 
 // TEST
+// The critter should move toward food if it's within it's smell range
+
+
+/// TESTED, FINAL EXAMPLE
+// FINAL, TESTED VERSION OF INTENTIONAL MOVEMENT V.1
+
+
+View.prototype.forage = function (food) {
+  var forageDir = null;
+  // start with offset 2 because critter has already checked the space around it (offset of 1) for food
+  for (var smellOffset = 2; smellOffset <= 5; smellOffset++) {
+    var newDirections = vectorRange(smellOffset);
+    for (var dir in newDirections) {
+      var forageTest = this.vector.plus(newDirections[dir]);
+      if (this.world.grid.isInside(forageTest)) {
+        if (charFromElement(this.world.grid.get(forageTest)) == food) {
+          forageDir = dir;
+          break;
+        }
+      }
+    }
+    if (forageDir) {
+      break;
+    }
+  }
+  return forageDir;
+}
+
+function vectorRange (offset) {
+
+  var newRange = {
+    "n": new Vector (0,-offset),
+    "ne": new Vector (offset, -offset),
+    "e": new Vector (offset, 0),
+    "se": new Vector (offset, offset),
+    "s": new Vector (0, offset),
+    "sw": new Vector (-offset, offset),
+    "w": new Vector (-offset, 0),
+    "nw": new Vector (-offset, -offset)
+  }
+
+  return newRange;
+}
+
+function SmartPlantEater() {
+	this.energy = 20;
+}
+
+SmartPlantEater.prototype.act = function(view) {
+  var space = view.find(" ");
+  if (this.energy > 60 && space)
+    return {type: "reproduce", direction: space};
+  var plant = view.find("*");
+  if (plant)
+    return {type: "eat", direction: plant};
+
+  if (space)
+    var foodSource = view.forage("*");
+    if (foodSource) {
+      return {type: "move", direction: foodSource};
+    } else {
+      return {type: "move", direction: space};
+    }
+}
