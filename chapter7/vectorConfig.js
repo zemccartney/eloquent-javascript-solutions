@@ -125,3 +125,11 @@ SmartPlantEater.prototype.act = function(view) {
       return {type: "move", direction: space};
     }
 }
+
+// TEST CASE
+  ["###########",
+   "#         #",
+   "#         #",
+   "#*    O   #",
+   "#         #",
+   "###########"]
