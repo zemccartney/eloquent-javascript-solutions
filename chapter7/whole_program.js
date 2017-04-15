@@ -242,7 +242,7 @@ World.prototype.turn = function() {
   // for each item in the world's grid i.e. grid's space
   this.grid.forEach(function(critter, vector) {
     // if the critter has an act method and the critter doesn't exist in the acted array
-    // TODO How do you identify critters? I assume checking an array for critters means we have someway of telling them as unique?
+    // TODO How do you identify critters? I assume checking an array for critters means we have some way of telling them as unique?
     if (critter.act && acted.indexOf(critter) == -1) {
       // add critter to acted array i.e. log that it has acted this turn
       acted.push(critter);
@@ -337,6 +337,7 @@ function View(world, vector) {
   // in the case of turn, it's the critter's location in the grid array converted to x and y values
   this.vector = vector;
 }
+
 View.prototype.look = function(dir) {
   // stores the result of adding a direction offset to critter's current vector
   var target = this.vector.plus(directions[dir]);
@@ -349,6 +350,8 @@ View.prototype.look = function(dir) {
     return "#";
   // in either case, the critter knows that it can move within the world, goes onto use the view.find method
 };
+
+// find all instances of the given character within view
 View.prototype.findAll = function(ch) {
   var found = [];
   for (var dir in directions)
@@ -365,6 +368,238 @@ View.prototype.find = function(ch) {
 };
 
 
+// var directionNames = "n ne e se s sw w nw".split(" ");
+// [ 'n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw' ]
+
+// TODO WHY DO WE NEED TO DO THIS?
+// Takes a direction string and and an offset number that represents the quantity and direction (positive or negative)
+// of 45 degree increments
+// Returns the direction string you're pointed in when you move that offsent (n)
+function dirPlus(dir, n) {
+  // returns index of the direction given in the directionNames array
+  var index = directionNames.indexOf(dir);
+
+  // returns
+  // requested index + added direction + 8 (length of directionNames)
+  // e.g. dir = "n" : index = 0, n = -3 : directionNames[5 % 8] -> 5
+  // REMEMBER:  module with first operand < second just returns the first
+  return directionNames[(index + n + 8) % 8];
+}
+
+// creates a critter whose only property is the direction it's heading in
+// always south to start
+function WallFollower() {
+  this.dir = "s";
+}
+
+// takes a view object, which models vision, inspecting in any directions for occupants of surrounding spaces
+WallFollower.prototype.act = function(view) {
+  // starting direction?
+  var start = this.dir;
+
+  // view.look takes a direction, returns the character present in the space adjacent to that
+  // critter in that direction
+  // direction, in this case, is 135 degrees counter clockwise from current (defaults to northeast)
+  // if that direction is NOT empty i.e. you're touching the top border wall of the world?
+  // if critter looks to the left and backwards and sees a non-empty space
+  // set start to the critter's left
+  // so, the while loop below breaks 2 steps earlier than it would
+  if (view.look(dirPlus(this.dir, -3)) != " ")
+    // set start to this.dir, which is set to this.dir - 2 (default "e")
+    start = this.dir = dirPlus(this.dir, -2);
+    // when touching a wall, moving clockwise from the critter's left, then scanning
+    // till you hit an empty square
+    // ALWAYS yields the direction parallel with encountered wall
+    // basically, start scanning from left, but do so only if there's something behind you to the left
+    // which will happen if you're moving west and north along a wall
+    // which will happen if a critter is moving along a wall, bumps into another critter on that
+    // wall — critter will move diagonally outward from the other critter,
+    // which satisfies the if condition, so the critter scans its next direction from its left,
+    // which is diagonal inward landing back on the wall OR, if the other critter moved that way
+    // parallel with the other critter, so the wall critter is always touching some object
+
+  // If you're moving in a blocked direction, look around till you find an open direction, one you can move in
+  // while looking in the start direction IS NOT empty
+  while (view.look(this.dir) != " ") {
+    // set this.dir to 45% clockwise from current this.dir (current direction critter's moving in)
+    // THIS LINE KEEPS CRITTERS MOVING ALONG THE WALL; IF THEY HIT A WALL, THEY LOOK ONLY 45% CLOCKWISE
+    // TO FIND A DIRECTION THEY CAN MOVE IN. WHEN A CRITTER LANDS IN A CORNER, DOING THIS 2 LEADS TO
+    // STAYING ADJACENT TO THE NEW WALL, BUT MOVING ALONG IT, PARALLEL TO IT BECAUSE THAT DIRECTION
+    // IS ALWAYS 90 DEGREES CLOCKWISE FROM CURRENT DIRECTION
+    this.dir = dirPlus(this.dir, 1);
+    // stop the loop if you get back to start direction, meaning you've looked
+    // in every direction and they are all occupied
+    // prevents infinite loop if crowded by critters
+    if (this.dir == start) break;
+  }
+
+  // so, theoreticallY, a wall follower could break off a wall, move in that direction for a while
+  // if it were surrounded by critters for a couple of turns, then suddenly not?
+  return {type: "move", direction: this.dir};
+};
+
+
+// ### Life-like World, with food and reproduction
+
+// calls the World constructor where this is the empty instance of LifeLikeWorld
+// would create a LifeLikeWorld instance if not for the prototype override seen below???? (no, that's not right)
+function LifelikeWorld(map, legend) {
+  World.call(this, map, legend);
+}
+
+// prototype holds the object from all objects of this type are created
+// dictates the object from objects of this type inherit
+LifelikeWorld.prototype = Object.create(World.prototype);
+
+// creates {} and stores in actionTypes
+var actionTypes = Object.create(null);
+
+
+LifelikeWorld.prototype.letAct = function(critter, vector) {
+  // wait....in this case, isn't this referring to the critter???). NOPE! We're not in a new function
+  // scope, still within the constructor's scope. if this were place in a function, then
+  // we'd be in the parameter function's scope
+  // store the action object (actionType and direction with empty space or south) to var action
+  var action = critter.act(new View(this, vector));
+
+
+  // stores a boolean i.e. if all requisite elements (required FOR..?) exist (coerced to true)
+  var handled = action &&
+    action.type in actionTypes &&
+    // Calls actionTypes function with "this" (context) set to the World
+    actionTypes[action.type].call(this, critter,
+                                  vector, action);
+
+  // if handled is false
+  if (!handled) {
+    // lower critter energy by .2
+    critter.energy -= 0.2;
+    // if the critter's energy is zero or lower
+    if (critter.energy <= 0)
+      // kill the critter, remove it from the grid
+      this.grid.set(vector, null);
+  }
+};
+
+// grow action, e.g. for plants
+actionTypes.grow = function(critter) {
+  critter.energy += 0.5;
+  // always returns true, used in the handled variable in the LifelikeWorld letAct method
+  return true;
+};
+
+// move action
+// action is object returned from critter.act and stored in action variable in LifelikeWorld constructor
+// vector is the critter's current position, which comes from Grid's forEach f.call expression, which creates a new Vector
+// TRAIL OF DATA : f.call -> forEach -> used within World.turn() --> passed as arguments to letAct() --> in lifeLikeWorld, passed to action handlers
+actionTypes.move = function(critter, vector, action) {
+  var dest = this.checkDestination(action, vector);
+  // dest exists only if it is a vector w/in grid space; dest == null means not inside grid
+  // this.grid.get(dest) == null means: if index of space at destination vector is empty space i.e. no element (null)
+  // if the destination's not in the grid OR the critter has too little energy OR
+  // the grid's index for the destination is occupied by another world denizen
+  // the action is false i.e. can't take place i.e. isn't handled and the critter rests
+  if (dest == null ||
+      critter.energy <= 1 ||
+      this.grid.get(dest) != null)
+    return false;
+    // critter loses 1 energy
+  critter.energy -= 1;
+  // set critter's current space to null; doesn't refer to the critter, but the critter still exists
+  // floating in space
+  this.grid.set(vector, null);
+  // place the critter on the destination space
+  this.grid.set(dest, critter);
+  return true;
+};
+
+// values from forEach call and turn, as well as act call w/in letAct
+actionTypes.eat = function(critter, vector, action) {
+  // check if destination is valid
+  var dest = this.checkDestination(action, vector);
+
+  // dest is defined only if it's valid and this.grid.get is defined (true) only if something exists that
+  // that index (not empty space)
+  var atDest = dest != null && this.grid.get(dest);
+  // if destination space is not occupied OR the occupant of the destination has no energy i.e. just died? or a wall?
+  if (!atDest || atDest.energy == null)
+    // action doesn't take place
+    return false;
+  // add destination occupant's energy to acting critter's
+  critter.energy += atDest.energy;
+  // remove the eaten critter from the grid
+  this.grid.set(dest, null);
+  // signifies action took place
+  // changing state of world is just a side-effect
+  // main goal is to produce true, so system knows action took place
+  return true;
+};
+
+actionTypes.reproduce = function(critter, vector, action) {
+  // baby constructed from same constructor as parent
+  var baby = elementFromChar(this.legend,
+                             critter.originChar);
+
+  // check destination
+  var dest = this.checkDestination(action, vector);
+  // if destination is valid OR critter has less than or equal to required energy OR something's in the destination spot
+  // don't take this action
+  if (dest == null ||
+      critter.energy <= 2 * baby.energy ||
+      this.grid.get(dest) != null)
+    return false;
+    // spend the energy
+  critter.energy -= 2 * baby.energy;
+  // add the baby to the destination location
+  this.grid.set(dest, baby);
+  return true;
+};
+
+// number between 3 and 7 for energy
+function Plant() {
+  this.energy = 3 + Math.random() * 4;
+}
+Plant.prototype.act = function(view) {
+  // reproduces if it has > 15 energy and can find an open space
+  if (this.energy > 15) {
+    var space = view.find(" ");
+    if (space)
+      return {type: "reproduce", direction: space};
+  }
+  // otherwise, grow till you have more than 20 energy, then wait
+  if (this.energy < 20)
+    return {type: "grow"};
+};
+
+function PlantEater() {
+  this.energy = 20;
+}
+
+PlantEater.prototype.act = function(view) {
+  // PRIORITIES: 1.) reproduce  2.) eat  3.) move
+  // looks for an empty space
+  var space = view.find(" ");
+  // if the critter has enough energy and it found an empty space
+  if (this.energy > 60 && space)
+    // return a reproduce action object, which is passed to the handler, which creates a new
+    // critter in the current critter's direction
+    return {type: "reproduce", direction: space};
+  // look for a plant
+  var plant = view.find("*");
+  // if you found a plant
+  if (plant)
+    // eat it! (stops the function)
+    // gets energy stored in the plant
+    return {type: "eat", direction: plant};
+  // if there is an empty adjacent space, move to it
+  // happens only if < 60 energy and !plant
+  if (space)
+    return {type: "move", direction: space};
+};
+
+
+// TODO Compose hierarchy of functions / dependencies to see how higher-level functions / objects
+// are composed from more basic ones
 
 
 http://javascriptissexy.com/javascript-apply-call-and-bind-methods-are-essential-for-javascript-professionals/
