@@ -67,7 +67,8 @@ View.prototype.forage = function (food) {
 /// TESTED, FINAL EXAMPLE
 // FINAL, TESTED VERSION OF INTENTIONAL MOVEMENT V.1
 
-
+// TODO Refactor outside for as a while statement; the last break statement is just manually
+// rewritten while logic; declare variables....somewhere else?
 View.prototype.forage = function (food) {
   var forageDir = null;
   // start with offset 2 because critter has already checked the space around it (offset of 1) for food
@@ -120,6 +121,7 @@ SmartPlantEater.prototype.act = function(view) {
   if (space)
     var foodSource = view.forage("*");
     if (foodSource) {
+      // check destination; if wall, move around like wall critter
       return {type: "move", direction: foodSource};
     } else {
       return {type: "move", direction: space};
