@@ -22,23 +22,6 @@ function SmartPlantEater () {
   };
 }
 
-actionTypes.reproduce = function (critter, vector, action) {
-  var baby = elementFromChar(this.legend,
-                             critter.originChar);
-  var dest = this.checkDestination(action, vector);
-  if (dest == null ||
-      critter.energy <= 2 * baby.energy ||
-      this.grid.get(dest) != null || critter.reproduction.babyCount == critter.reproduction.babyLimit)
-    // include reaching critter's reproduction limit as a failure condition
-    return false;
-  // increase amount of energy deducted (dangerous; this is a global setting)
-  critter.energy -= 4 * baby.energy;
-  // keep track of number of babies produced
-  critter.reproduction.babyCount++;
-  this.grid.set(dest, baby);
-  return true;
-};
-
 SmartPlantEater.prototype.act = function (view) {
   var space = view.find(" ");
   if (this.energy > 120 && space)
