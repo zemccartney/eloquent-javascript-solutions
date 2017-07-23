@@ -44,7 +44,7 @@ function Tiger() {
 
 Tiger.prototype.act = function (view) {
   var space = view.find(" ");
-  if (this.energy > 150 && space)
+  if (this.energy > 200 && space)
     return {type: "reproduce", direction: space};
   var plantEater = view.find("O");
   if (plantEater)
@@ -66,7 +66,24 @@ How could you improve?
 - Tweak plant eater, make it eat and reproduce more (drop repro energy and eating limits, see what happens)
      - EXPECT: will result in more plant eaters, so greater chance that tigers will reproduce
 
+HOW?
+
 - BUG FIX: Must at least make energy for repro double + 1 (at least) initial energy, so repro cost does not
  bring Tiger energy to negative, freezing the Tigers
+    - because repro fails if parent energy is not greater than double the child energy
+    if (dest == null ||
+      critter.energy <= 2 * baby.energy ||
+      this.grid.get(dest) != null)
+    return false;
+**********FIXED!!!
+
+ROUND 2
+CHANGES
+reduced both critters repro energies
+gave tiger the forage function
+upped forage function range to 4
+revised forage function interface to take second parameter, extent of smell (number of spaces)
+tried removing hunger limit on plant eaters...worked too well
+
 
 // PERFECT
