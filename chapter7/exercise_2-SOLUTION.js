@@ -189,3 +189,47 @@ Plant.prototype.act = function(view) {
   if (this.energy < 20)
     return {type: "grow"};
 };
+
+
+RESULTS
+=========
+
+About the same as exercise 1; WAAAAYYY OVERENGINEERED, DID NOT
+GET AT THE ROOT OF THE PROBLEM EITHER, SO FAR LESS EFFECTIVE THAN
+THE BOOK SOLUTION
+
+function Tiger() {
+  this.energy = 100;
+  this.direction = "w";
+  // Used to track the amount of prey seen per turn in the last six turns
+  this.preySeen = [];
+}
+Tiger.prototype.act = function(view) {
+  // Average number of prey seen per turn
+  // 0, initial accumulator value, argument, is necessary because
+  // calling reduce on an empty array throws an error
+  var seenPerTurn = this.preySeen.reduce(function(a, b) {
+    return a + b;
+  }, 0) / this.preySeen.length;
+  // considers all adjacent prey (prey it can see) in a given turn
+  var prey = view.findAll("O");
+  // adds this number to its memory (store of prey seen recently)
+  this.preySeen.push(prey.length);
+  // Drop the first element from the array when it is longer than 6
+  if (this.preySeen.length > 6)
+    this.preySeen.shift();
+
+  // Only eat if the predator saw more than ¼ prey animal per turn
+  // AND, of course, if it's adjacent to prey (prey.length)
+  if (prey.length && seenPerTurn > 0.25)
+    // selects a prey critter at random from all prey seen this turn
+    return {type: "eat", direction: randomElement(prey)};
+
+  var space = view.find(" ");
+  // very slow to reproduce, helps keep prey alive
+  if (this.energy > 400 && space)
+    return {type: "reproduce", direction: space};
+  if (view.look(this.direction) != " " && space)
+    this.direction = space;
+  return {type: "move", direction: this.direction};
+};

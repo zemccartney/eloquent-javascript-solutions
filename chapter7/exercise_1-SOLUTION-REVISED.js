@@ -3,7 +3,7 @@
 // worked well for exercise 1 w/ some slight reconfiguring for a smaller space
 
 function SmartPlantEater () {
-  this.energy = 45;
+  this.energy = 30;
   this.appetite = {
     turnsEating: 0,
     turnsDigesting: 0,
@@ -25,7 +25,6 @@ SmartPlantEater.prototype.updateAppetite = function (hungry, eating) {
     }
   } else {
     this.appetite.turnsDigesting++;
-    console.log("planty digesting!");
     if (this.appetite.turnsDigesting == 3) {
       this.appetite.hungry = true;
       this.appetite.turnsDigesting = 0;
@@ -110,3 +109,68 @@ function vectorRange (offset) {
 
   return newRange;
 }
+
+RESULTS
+How book solved problems:
+
+function SmartPlantEater() {
+  this.energy = 30;
+  // preset direction that dictates movement
+  this.direction = "e";
+}
+
+SmartPlantEater.prototype.act = function(view) {
+  var space = view.find(" ");
+  // increased energy required to reproduce, so plant eaters reproduce less frequently
+  if (this.energy > 90 && space)
+    return {type: "reproduce", direction: space};
+  // plant eater considers all matches, not just any 1
+  // simulates broader thinking; considering not just a single, immediate case,
+  // but how that case fits in with a broader context i.e. making a more informed decision
+  // WE GATHER MORE INFORMATION ABOUT THE WORLD HERE
+  var plants = view.findAll("*");
+  // plant eater won't eat unless it finds more than 1 plant
+  if (plants.length > 1)
+    return {type: "eat", direction: randomElement(plants)};
+  // plant eater always moves in set direction
+  // unless that direction is occupied
+  // Not intentional movement, but not random either, so increases
+  // plant eater's chances that it will find food because we know if it
+  // starts moving in the direction of food, it will definitely arrive at that food
+  if (view.look(this.direction) != " " && space)
+    this.direction = space;
+  return {type: "move", direction: this.direction};
+};
+
+- greedy, eat a lot, wipe out plants: eats only if it is adjacent to
+more than 1 plant (findAll vs. find)
+   - IMPLICATION: Plant eater will NEVER eat plants to extinction
+
+- randomized movement, do not seek out plants: always moves in the same
+direction (initially set to east) unless view.find(" ") returned a space and
+the direction it would head in is not empty
+   WHY DOES THAT HELP?
+   Makes the plant eater more likely to cover more ground to find food,
+   move until it finds a wall, another critter, or a plant, so increases chances
+   of finding food dramatically
+
+- fast breeding: upped reproduction requirement
+
+His solution took about 3 lines worth of changes and works substantially better than yours, which
+added about 70 lines. Great fucking job
+
+What can you learn?
+
+- my first solution worked a lot better
+- both suck, relatively; hard to read, excessively complex
+
+DO NOT JUST START CODING;
+IF YOU FIND YOURSELF ADDING A TON OF CODE, STOP
+YOU ARE LIKELY OVERTHINKING
+WRITE OUT THE PROBLEMS YOU ARE TRYING TO SOLVE, WORK THROUGH HOW THEY
+ARE REPRESENTED IN THE CODE / WHY THEY EXIST
+THE PROBLEMS IDENTIFIED IN THE SIMULATION REQUIRED SOME IMAGINATIVE THINKING
+AND ANALYSIS TO ARRIVE AT AND DESCRIBE; ASKING AND DETERMING (AT LEAST A FEW
+REASONS) WHY A PROBLEM EXISTS IS VITAL TO ARRIVING AT A POINTED SOLUTION
+
+PROBLEM DEFINITION CAN BE TIME CONSUMING; IT IS TIME WELL-SPENT
