@@ -6,12 +6,26 @@ function MultiplicatorUnitFailure(message) {
 	this.message = message;
 }
 
+function primitiveMultiply(a, b) {
+  if (Math.random() < 0.5)
+    return a * b;
+  else
+		// only new part is adding message to the error so something useful is displayed if the error is read
+    throw new MultiplicatorUnitFailure("Primitivity strikes again");
+}
+
 MultiplicatorUnitFailure.prototype = Object.create(Error.prototype);
 
 function reliableMultiply(a, b) {
+	// infinite loop
   for ( ;; ) {
+		// tries primitive multiply
     try {
+				// if this succeeds, then the return statement fully executes and
+				// brings us outside the loop
         return primitiveMultiply(a, b);
+			// if it fails, deal with the error by either exploding if not a primitive multiply error (custom type)
+			// or just logging and starting a new iteration of the loop
     } catch (error) {
         if (!(error instanceof MultiplicatorUnitFailure)) {
           throw error;
@@ -24,8 +38,38 @@ function reliableMultiply(a, b) {
 
 RESULTS
 
+Differences from book
+- no logging statement
+- error variable named e for short
+
+Otherwise, exactly the same
+
 EXPERIMENTATION
 
+Tried adding the following
+
+var test = new NestedMultiplyError();
+// Both return true
+console.log(test instanceof MultiplicatorUnitFailure);
+console.log(test instanceof NestedMultiplyError);
+
+function NestedMultiplyError(message) {
+	this.message = message;
+}
+NestedMultiplyError.prototype = Object.create(MultiplicatorUnitFailure.prototype);
+
+// w/in PrimitiveMultiply
+throw new NestedMultiplyError("Primitivity strikes again");
+
+// I just recently learned that instanceof doesn't test if the object
+// is of the given type, but if the given object has the given type in its
+// prototype chain
+// So instanceof is saying: is this object somehow related to the given type (constructor)?
+// NOT: is this object the given type?
+
+// TODO Review
+// - [ ] how prototype function and property relate / differ
+// - [ ] What does getPrototypeOf do?
 
 
 // PREPARE

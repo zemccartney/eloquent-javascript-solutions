@@ -2,9 +2,13 @@ TITLE: The Locked Box
 
 SUBMITTED SOLUTION (ASSUMES PASSED TESTING)
 function withBoxUnlocked (unlockFunction) {
+
     var lockedAtStart = false;
+    // if box is locked at the start
     if (box.locked) {
+        // then remember that
         lockedAtStart = true;
+        // unlock the box
         box.unlock();
     }
 
@@ -12,13 +16,40 @@ function withBoxUnlocked (unlockFunction) {
         unlockFunction();
 
     } finally {
+        // lock the box only if it was unlocked at the start
+        // finally so this happens no matter what
+        // we handle the box locking regardless of the outcome of the unlockFunction
+        // use finally when you later steps have to happen and are not contingent on earlier outcomes (but errors would result if earlier outcomes are exceptions that disrupt execution)
         if (lockedAtStart) {
             box.lock();
         }
     }
 }
 
+
+
+////// BOOK SOLUTION
+function withBoxUnlocked(body) {
+  var locked = box.locked;
+
+  // if box is unlocked, just run the function
+  // NO NEED TO CONDITIONALIZE LOCKING, JUST DON'T EVEN DO IT
+  if (!locked)
+    return body();
+
+  // Unlocking reached only if box was locked at the start
+  box.unlock();
+  try {
+    return body();
+  } finally {
+    box.lock();
+  }
+}
+
 RESULTS
+
+- My solution was similar to book, but not nearly as elegant
+- WHAT CAN YOU LEARN?
 
 EXPERIMENTATION
 
