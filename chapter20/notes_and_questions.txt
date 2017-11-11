@@ -1,0 +1,16 @@
+
+- [ ] How does Node's require function work?
+    Basically, reads a file, assigns exports to global variables,
+    so export functionality is scoped to that variable (effectively a namespace)
+
+
+- [ ] From CodeFights, but still: how do you identify the number of places a base 10
+number has in JS? How do you mathematically model that?
+53 % 10 = 3
+500 / 10 = 50...
+
+
+- [ / ] From CodeFights, Sort By Height exercise, why does solution fail if you return forEach?
+BECAUSE forEach doesn't return anything....it just does some action for each value in an array
+In your case, that action is manipulating the actual array....which is a tad confusing
+     [ ] Review how forEach works relative to the array its called on; just side effects
