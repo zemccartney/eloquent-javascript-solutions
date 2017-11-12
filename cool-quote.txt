@@ -1,0 +1,13 @@
+"the Hypertext Transfer Protocol (HTTP) and Uniform Resource Identifiers (URI),
+the two specifications that define the generic interface used by all component
+interactions on the Web"
+
+http://www.ics.uci.edu/~fielding/pubs/dissertation/introduction.htm
+
+2 interfaces for naming and requesting documents distributed across systems, the web(?)
+
+The web is, simply, a mass of resources (documents)
+We name these resources with URIs
+We ask each other for them using HTTP
+The web is a massive, rapid, self-service, dynamic library that includes different media,
+data processing, etc. more complex stuff than just static resources (books, articles)
